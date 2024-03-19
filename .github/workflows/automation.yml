@@ -26,7 +26,7 @@ jobs:
         run: |
           response=$(curl -s -X POST \
           -H "Content-Type: application/json" \
-          -d '{ "date": "2024-04-01", "identifier": "dhaka-to-rajshahi", "structureType": "BUS" }' \
+          -d '{ "date": "2024-04-05", "identifier": "dhaka-to-rajshahi", "structureType": "BUS" }' \
           https://api.bdtickets.com:20102/v1/coaches/search)
           echo "$response" | jq '.data[] | {companyName, arrivaleTime}' > new_coaches.json
 
@@ -44,7 +44,9 @@ jobs:
       - name: Check data
         run: |
           echo "Data changed: ${{ steps.compare.outputs.data_changed }}"
+          echo "New data:"
           cat new_coaches.json
+          echo "Previous data:"
           cat previous_coaches.json
 
       - name: Send Slack message if data changed
@@ -53,7 +55,7 @@ jobs:
           mv new_coaches.json previous_coaches.json
           curl -X POST \
             -H 'Content-Type: application/json' \
-            --data "{'text':'$(cat coaches.json) ---- https://bdtickets.com/bus/search/dhaka-to-rajshahi?journeyDate=2024-04-05'}" \
+            --data "{'text':'$(cat previous_coaches.json) ---- https://bdtickets.com/bus/search/dhaka-to-rajshahi?journeyDate=2024-04-05'}" \
             ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Cache updated data
