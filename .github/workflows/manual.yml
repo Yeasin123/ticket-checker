@@ -43,9 +43,9 @@ jobs:
         if: steps.compare.outputs.data_changed == 'true'
         run: |
           mv new_coaches.json previous_coaches.json
-          coaches_data=$(< previous_coaches.json)
-          curl -X POST -H 'Content-type: application/json' \
-            --data '{"text":"Coaches information has changed:\n'"$coaches_data"'"}' \
+          curl -X POST \
+            -H 'Content-Type: application/json' \
+            --data '{"text":"'"$(cat previous_coaches.json)"'"}' \
             ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Cache updated data
