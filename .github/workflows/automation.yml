@@ -27,7 +27,7 @@ jobs:
           response=$(curl -s -X POST \
           -H "Content-Type: application/json" \
           -d '{ "date": "2024-04-05", "identifier": "dhaka-to-rajshahi", "structureType": "BUS" }' \
-          https://api.bdtickets.com:20102/v1/coaches/search)
+          ${{ secrets.TICKET_SITE_URL }})
           echo "$response" | jq '.data[] | {companyName, arrivaleTime}' > new_coaches.json
 
       - name: Compare data
