@@ -45,7 +45,7 @@ jobs:
           mv new_coaches.json previous_coaches.json
           curl -X POST \
             -H 'Content-Type: application/json' \
-            --data '{"text":"'"$(cat previous_coaches.json)"'"}' \
+            --data '{"text":"https://bdtickets.com/bus/search/dhaka-to-rajshahi?journeyDate=2024-04-05"}' \
             ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Cache updated data
