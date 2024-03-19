@@ -26,7 +26,7 @@ jobs:
         run: |
           response=$(curl -s -X POST \
           -H "Content-Type: application/json" \
-          -d '{ "date": "2024-04-05", "identifier": "dhaka-to-rajshahi", "structureType": "BUS" }' \
+          -d '{ "date": "2024-04-01", "identifier": "dhaka-to-rajshahi", "structureType": "BUS" }' \
           https://api.bdtickets.com:20102/v1/coaches/search)
           echo "$response" | jq '.data[] | {companyName, arrivaleTime}' > new_coaches.json
 
