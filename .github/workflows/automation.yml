@@ -20,7 +20,7 @@ jobs:
                              "structureType": "BUS"
                            }' \
                        https://api.bdtickets.com:20102/v1/coaches/search)
-          echo "$response" | jq -r '.data[] | {company: .company.name, coachNo, arrivaleTime}' > coaches.json
+          echo "$response" | jq -r '.data[] | {company: company.name, coachNo, arrivaleTime}' > coaches.json
         continue-on-error: true  # Continue to next step even if this step fails
 
       - name: Send Slack message if data retrieved
