@@ -41,6 +41,12 @@ jobs:
             echo "data_changed=true" >> $GITHUB_OUTPUT
           fi
 
+      - name: Check data
+        run: |
+          echo "Data changed: ${{ steps.compare.outputs.data_changed }}"
+          cat new_coaches.json
+          cat previous_coaches.json
+
       - name: Send Slack message if data changed
         if: steps.compare.outputs.data_changed == 'true'
         run: |
