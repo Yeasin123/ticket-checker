@@ -1,4 +1,4 @@
-name: Manual workflow
+name: Check Tickets
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     - cron: '*/10 * * * *' # Runs every minute
 
 jobs:
-  check_coaches:
+  check_tickets:
     runs-on: ubuntu-latest
 
     steps:
