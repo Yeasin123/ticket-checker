@@ -3,6 +3,8 @@ name: Manual workflow
 on:
   push:
   workflow_dispatch:
+  schedule:
+    - cron: '*/10 * * * *'  # Runs every minute
 
 jobs:
   check_coaches:
@@ -26,7 +28,7 @@ jobs:
           -H "Content-Type: application/json" \
           -d '{ "date": "2024-04-05", "identifier": "dhaka-to-rajshahi", "structureType": "BUS" }' \
           https://api.bdtickets.com:20102/v1/coaches/search)
-          echo "$response" | jq -r '.data[] | {company: .company.name, coachNo, arrivaleTime}' > new_coaches.json
+          echo "$response" | jq -r '.data[] | {company: companyName, coachNo, arrivaleTime}' > new_coaches.json
 
       - name: Compare data
         id: compare
