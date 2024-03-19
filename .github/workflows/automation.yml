@@ -1,0 +1,33 @@
+name: Check Coaches API
+
+on:
+  schedule:
+    - cron: '*/30 * * * *' # Runs every 30 minutes
+
+jobs:
+  check_coaches:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check Coaches API
+        id: check_api
+        run: |
+          response=$(curl -s -X POST \
+                       -H "Content-Type: application/json" \
+                       -d '{
+                             "date": "2024-04-05",
+                             "identifier": "dhaka-to-rajshahi",
+                             "structureType": "BUS"
+                           }' \
+                       https://api.bdtickets.com:20102/v1/coaches/search)
+          echo "$response" | jq -r '.data[] | {company: .company.name, coachNo, arrivaleTime}' > coaches.json
+        continue-on-error: true # Continue to next step even if this step fails
+
+      - name: Send Slack message if data retrieved
+        if: steps.check_api.outcome == 'success'
+        uses: rtCamp/action-slack-notify@v2
+        with:
+          slack_webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          slack_message: |
+            Coaches information:
+            $(cat coaches.json)
