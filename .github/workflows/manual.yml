@@ -19,12 +19,15 @@ jobs:
                              "structureType": "BUS"
                            }' \
                        https://api.bdtickets.com:20102/v1/coaches/search)
-          echo "$response" | jq -r '.data[] | {company: company.name, coachNo, arrivaleTime}' > coaches.json
+          echo "$response" | jq -r '.data[] | {company: .company.name, coachNo, arrivaleTime}' > new_coaches.json
         continue-on-error: true  # Continue to next step even if this step fails
 
       - name: Send Slack message if data retrieved
         if: steps.check_api.outcome == 'success'
         run: |
-          curl -X POST -H 'Content-type: application/json' \
-               --data "{\"text\":\"Coaches information: $(cat coaches.json)\"}" \
-               ${{ secrets.SLACK_WEBHOOK_URL }}
+          if ! cmp -s new_coaches.json previous_coaches.json; then
+            mv new_coaches.json previous_coaches.json
+            curl -X POST -H 'Content-type: application/json' \
+                 --data "{\"text\":\"Coaches information has changed: $(cat new_coaches.json)\"}" \
+                 ${{ secrets.SLACK_WEBHOOK_URL }}
+          fi
