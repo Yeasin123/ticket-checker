@@ -2,7 +2,7 @@ name: Check Coaches API
 
 on:
   schedule:
-    - cron: '*/3 * * * *'  # Runs every 30 minutes
+    - cron: '* * * * *'  # Runs every minute
 
 jobs:
   check_coaches:
