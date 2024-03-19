@@ -9,49 +9,51 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Cache previous data
-      id: cache
-      uses: actions/cache@v3
-      with:
-        path: previous_coaches.json
-        key: ${{ runner.os }}-coaches-data
+      - name: Cache previous data
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: previous_coaches.json
+          key: ${{ runner.os }}-coaches-data
 
-    - name: Check Coaches API
-      id: check_api
-      run: |
-        response=$(curl -s -X POST \
-        -H "Content-Type: application/json" \
-        -d '{
-          "date": "2024-04-05",
-          "identifier": "dhaka-to-rajshahi",
-          "structureType": "BUS"
-        }' \
-        https://api.bdtickets.com:20102/v1/coaches/search)
-        echo "$response" | jq -r '.data[] | {company: .company.name, coachNo, arrivaleTime}' > new_coaches.json
+      - name: Check Coaches API
+        id: check_api
+        run: |
+          response=$(curl -s -X POST \
+          -H "Content-Type: application/json" \
+          -d '{
+            "date": "2024-04-05",
+            "identifier": "dhaka-to-rajshahi",
+            "structureType": "BUS"
+          }' \
+          https://api.bdtickets.com:20102/v1/coaches/search)
+          echo "$response" | jq -r '.data[] | {company: .company.name, coachNo, arrivaleTime}' > new_coaches.json
 
-    - name: Compare data
-      id: compare
-      run: |
-        if [ -f "previous_coaches.json" ]; then
-          if ! cmp -s new_coaches.json previous_coaches.json; then
+      - name: Compare data
+        id: compare
+        run: |
+          if [ -f "previous_coaches.json" ]; then
+            if ! cmp -s new_coaches.json previous_coaches.json; then
+              echo "data_changed=true" >> $GITHUB_OUTPUT
+            fi
+          else
             echo "data_changed=true" >> $GITHUB_OUTPUT
           fi
-        else
-          echo "data_changed=true" >> $GITHUB_OUTPUT
-        fi
 
-    - name: Send Slack message if data_changed
-      if: steps.compare.outputs.data_changed == 'true'
-      run: |
-        mv new_coaches.json previous_coaches.json
-        echo "Coaches information: $(cat previous_coaches.json)"
+      - name: Send Slack message if data changed
+        if: steps.compare.outputs.data_changed == 'true'
+        run: |
+          mv new_coaches.json previous_coaches.json
+          curl -X POST -H 'Content-type: application/json' \
+          --data "{"text":"Coaches information has changed: $(cat previous_coaches.json)"}" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
 
-    - name: Cache updated data
-      if: steps.compare.outputs.data_changed == 'true'
-      uses: actions/cache@v3
-      with:
-        path: previous_coaches.json
-        key: ${{ runner.os }}-coaches-data
+      - name: Cache updated data
+        if: steps.compare.outputs.data_changed == 'true'
+        uses: actions/cache@v4
+        with:
+          path: previous_coaches.json
+          key: ${{ runner.os }}-coaches-data
