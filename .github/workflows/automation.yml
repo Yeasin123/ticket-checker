@@ -60,6 +60,7 @@ jobs:
             ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Cache new data
+        if: steps.compare.outputs.data_changed == 'true'
         uses: actions/cache@v4
         with:
           path: prev-coaches.json
