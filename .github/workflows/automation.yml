@@ -46,12 +46,13 @@ jobs:
       - name: Check data
         run: |
           echo "Data changed: ${{ steps.compare.outputs.data_changed }}"
-          echo "New data: $(cat new-caches.json || 'no data')"
-          echo "Previous data: $(cat prev-coaches.json || 'no data')"
+          echo "New data: '$(cat new-caches.json || "no data")'"
+          echo "Previous data: '$(cat prev-coaches.json || "no data")'"
 
       - name: Send Slack message if data changed
         if: steps.compare.outputs.data_changed == 'true'
         run: |
+          rm -f prev-coaches.json
           mv new-caches.json prev-coaches.json
           curl -X POST \
             -H 'Content-Type: application/json' \
@@ -59,7 +60,6 @@ jobs:
             ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Cache new data
-        if: steps.compare.outputs.data_changed == 'true'
         uses: actions/cache@v4
         with:
           path: prev-coaches.json
