@@ -46,8 +46,8 @@ jobs:
       - name: Check data
         run: |
           echo "Data changed: ${{ steps.compare.outputs.data_changed }}"
-          echo "New data: '$(cat new-caches.json || "no data")'"
-          echo "Previous data: '$(cat prev-coaches.json || "no data")'"
+          echo "New data: '$(cat new-caches.json || true)'"
+          echo "Previous data: '$(cat prev-coaches.json || true)'"
 
       - name: Send Slack message if data changed
         if: steps.compare.outputs.data_changed == 'true'
