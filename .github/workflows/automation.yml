@@ -7,62 +7,62 @@ on:
     - cron: '*/10 * * * *' # Runs every 10 minutes
 
 jobs:
+
   check_tickets:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Restore cached data
-        id: cache
-        uses: actions/cache@v4
-        with:
-          path: previous_coaches.json
-          key: ${{ runner.os }}-coaches-data
+    - name: Restore cached data
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: previous_coaches.json
+        key: ${{ runner.os }}-coaches-data
 
-      - name: Check Coaches API
-        id: check_api
-        run: |
-          response=$(curl -s -X POST \
-          -H "Content-Type: application/json" \
-          -d '{ "date": "2024-04-05", "identifier": "dhaka-to-rajshahi", "structureType": "BUS" }' \
-          ${{ secrets.TICKET_SITE_URL }})
-          echo "$response" | jq '.data[] | {companyName, arrivaleTime}' > new_coaches.json
+    - name: Check Coaches API
+      id: check_api
+      run: |
+        response=$(curl -s -X POST \
+        -H "Content-Type: application/json" \
+        -d '{ "date": "2024-04-05", "identifier": "dhaka-to-rajshahi", "structureType": "BUS" }' \
+        ${{ secrets.TICKET_SITE_URL }})
+        echo "$response" | jq '.data[] | {companyName, arrivaleTime}' > new_coaches.json
 
-      - name: Compare data
-        id: compare
-        run: |
-          if [ -f "previous_coaches.json" ]; then
-            if ! cmp -s new_coaches.json previous_coaches.json; then
-              echo "data_changed=true" >> $GITHUB_OUTPUT
-            else
-              echo "data_changed=false" >> $GITHUB_OUTPUT
-            fi
-          else
+    - name: Compare data
+      id: compare
+      run: |
+        if [ -f "previous_coaches.json" ]; then
+          if ! cmp -s new_coaches.json previous_coaches.json; then
             echo "data_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "data_changed=false" >> $GITHUB_OUTPUT
           fi
+        else
+          echo "data_changed=true" >> $GITHUB_OUTPUT
+        fi
 
-      - name: Check data
-        run: |
-          echo "Data changed: ${{ steps.compare.outputs.data_changed }}"
-          echo "New data:"
-          cat new_coaches.json || true
-          echo "Previous data:"
-          cat previous_coaches.json || true
+    - name: Check data
+      run: |
+        echo "Data changed: ${{ steps.compare.outputs.data_changed }}"
+        echo "New data:"
+        cat new_coaches.json || true
+        echo "Previous data:"
+        cat previous_coaches.json || true
 
-      - name: Send Slack message if data changed
-        if: steps.compare.outputs.data_changed == 'true'
-        run: |
-          rm -f previous_coaches.json
-          curl -X POST \
-            -H 'Content-Type: application/json' \
-            --data "{'text':'$(cat new_coaches.json) ---- https://bdtickets.com/bus/search/dhaka-to-rajshahi?journeyDate=2024-04-05'}" \
-            ${{ secrets.SLACK_WEBHOOK_URL }}
+    - name: Send Slack message if data changed
+      if: steps.compare.outputs.data_changed == 'true'
+      run: |
+        curl -X POST \
+          -H 'Content-Type: application/json' \
+          --data "{'text':'$(cat new_coaches.json) ---- https://bdtickets.com/bus/search/dhaka-to-rajshahi?journeyDate=2024-04-05'}" \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
 
-      - name: Cache new data
-        if: steps.compare.outputs.data_changed == 'true'
-        uses: actions/cache@v4
-        with:
-          path: new_coaches.json
-          key: ${{ runner.os }}-coaches-data
+    - name: Cache new data
+      if: steps.compare.outputs.data_changed == 'true'
+      uses: actions/cache@v4
+      with:
+        path: new_coaches.json
+        key: ${{ runner.os }}-coaches-data
