@@ -4,7 +4,7 @@ on:
   push:
   workflow_dispatch:
   schedule:
-    - cron: '*/10 * * * *' # Runs every minute
+    - cron: '*/10 * * * *' # Runs every 10 minutes
 
 jobs:
   check_tickets:
@@ -14,7 +14,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Cache previous data
+      - name: Restore cached data
         id: cache
         uses: actions/cache@v4
         with:
@@ -36,6 +36,8 @@ jobs:
           if [ -f "previous_coaches.json" ]; then
             if ! cmp -s new_coaches.json previous_coaches.json; then
               echo "data_changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "data_changed=false" >> $GITHUB_OUTPUT
             fi
           else
             echo "data_changed=true" >> $GITHUB_OUTPUT
@@ -52,15 +54,15 @@ jobs:
       - name: Send Slack message if data changed
         if: steps.compare.outputs.data_changed == 'true'
         run: |
-          mv new_coaches.json previous_coaches.json
+          rm -f previous_coaches.json
           curl -X POST \
             -H 'Content-Type: application/json' \
-            --data "{'text':'$(cat previous_coaches.json) ---- https://bdtickets.com/bus/search/dhaka-to-rajshahi?journeyDate=2024-04-05'}" \
+            --data "{'text':'$(cat new_coaches.json) ---- https://bdtickets.com/bus/search/dhaka-to-rajshahi?journeyDate=2024-04-05'}" \
             ${{ secrets.SLACK_WEBHOOK_URL }}
 
-      - name: Cache updated data
+      - name: Cache new data
         if: steps.compare.outputs.data_changed == 'true'
         uses: actions/cache@v4
         with:
-          path: previous_coaches.json
+          path: new_coaches.json
           key: ${{ runner.os }}-coaches-data
